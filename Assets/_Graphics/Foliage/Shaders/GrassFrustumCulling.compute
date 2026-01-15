@@ -1,0 +1,90 @@
+// GPU Frustum Culling Compute Shader for Grass System
+// Performs parallel AABB frustum culling for octree chunks
+
+#pragma kernel FrustumCull
+
+// Input: Octree chunk data
+struct ChunkData
+{
+    float3 boundsCenter;
+    float3 boundsExtents;
+    uint startInstance;
+    uint instanceCount;
+};
+
+// Output: Visible chunk indices
+struct VisibleChunk
+{
+    uint chunkIndex;
+    uint startInstance;
+    uint instanceCount;
+};
+
+// Frustum planes (6 planes: left, right, bottom, top, near, far)
+// Each plane stored as float4(normal.xyz, distance)
+cbuffer FrustumPlanes
+{
+    float4 _FrustumPlanes[6];
+};
+
+// Input/Output buffers
+StructuredBuffer<ChunkData> _ChunkBuffer;           // All octree chunks
+RWStructuredBuffer<VisibleChunk> _VisibleChunks;    // Output visible chunks
+RWStructuredBuffer<uint> _VisibleChunkCount;        // Atomic counter for visible chunks
+
+// Test if AABB is visible against frustum planes
+// Returns true if AABB intersects or is inside frustum
+bool IsAABBVisible(float3 center, float3 extents)
+{
+    // Test against all 6 frustum planes
+    [unroll]
+    for (int i = 0; i < 6; i++)
+    {
+        float3 normal = _FrustumPlanes[i].xyz;
+        float distance = _FrustumPlanes[i].w;
+        
+        // Calculate the positive extent (furthest point on the AABB in the direction of the plane normal)
+        float3 positiveExtent = extents * sign(normal);
+        
+        // If the furthest point is outside (behind) the plane, AABB is completely outside
+        float d = dot(normal, center + positiveExtent) + distance;
+        
+        if (d < 0.0)
+            return false; // Outside this plane
+    }
+    
+    return true; // Inside or intersecting all planes
+}
+
+[numthreads(64, 1, 1)]
+void FrustumCull(uint3 id : SV_DispatchThreadID)
+{
+    uint chunkIndex = id.x;
+    
+    // Bounds check
+    uint numChunks;
+    uint stride;
+    _ChunkBuffer.GetDimensions(numChunks, stride);
+    
+    if (chunkIndex >= numChunks)
+        return;
+    
+    // Load chunk data
+    ChunkData chunk = _ChunkBuffer[chunkIndex];
+    
+    // Perform frustum culling test
+    if (IsAABBVisible(chunk.boundsCenter, chunk.boundsExtents))
+    {
+        // Chunk is visible - add to output buffer
+        uint outputIndex;
+        InterlockedAdd(_VisibleChunkCount[0], 1, outputIndex);
+        
+        // Write visible chunk data
+        VisibleChunk visibleChunk;
+        visibleChunk.chunkIndex = chunkIndex;
+        visibleChunk.startInstance = chunk.startInstance;
+        visibleChunk.instanceCount = chunk.instanceCount;
+        
+        _VisibleChunks[outputIndex] = visibleChunk;
+    }
+}

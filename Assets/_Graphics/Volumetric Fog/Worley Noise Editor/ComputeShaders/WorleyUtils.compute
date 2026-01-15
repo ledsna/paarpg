@@ -1,0 +1,51 @@
+﻿#pragma kernel CSCopy
+#pragma kernel CSClear
+#pragma kernel CSSlice
+
+static const int numThreads = 8;
+
+// General
+// -------
+RWTexture3D<float4> renderTex;
+// -------
+
+// Copy
+// ----
+Texture3D<float4> tex;
+
+
+[numthreads(numThreads,numThreads,numThreads)]
+void CSCopy(uint3 id : SV_DispatchThreadID)
+{
+    renderTex[id] = tex[id];
+}
+
+// ----
+
+// Clear
+// -----
+float4 channelMask;
+
+
+[numthreads(numThreads,numThreads,numThreads)]
+void CSClear(uint3 id : SV_DispatchThreadID)
+{
+    renderTex[id] = renderTex[id] * channelMask;
+}
+
+// -----
+
+// Slice
+// -----
+RWTexture2D<float4> slice;
+int layer;
+
+
+[numthreads(numThreads,numThreads,1)]
+void CSSlice(uint3 id : SV_DispatchThreadID)
+{
+    uint3 pos = uint3(id.x, id.y, layer);
+    slice[id.xy] = renderTex[pos];
+}
+
+// -----

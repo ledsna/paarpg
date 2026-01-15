@@ -1,0 +1,3 @@
+[submodule "Packages/3dxel-Packages"]
+	path = Packages/3dxel-Packages
+	url = git@github.com:F1Soda/3dxel-Packages.git

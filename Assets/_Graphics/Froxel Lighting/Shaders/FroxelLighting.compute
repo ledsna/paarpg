@@ -1,0 +1,470 @@
+#pragma kernel InjectLighting
+#pragma kernel Accumulate
+
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+
+// ============================================================================
+// FROXEL VOLUME DEFINITION
+// ============================================================================
+// Grid topology: view-centered froxels
+// X/Y: screen-aligned
+// Z: optical-depth mapped (power-law distribution)
+//
+// This is NOT uniform world-space voxelization.
+// It represents OPTICAL IMPORTANCE.
+// ============================================================================
+
+// Output Textures
+RWTexture3D<float4> _VolumeInject;      // RGB: In-scattered light, A: Extinction
+RWTexture3D<float4> _VolumeAccumulated; // RGB: Accumulated light, A: Transmittance
+
+// Grid Parameters
+float4 _GridResolution;     // x, y, z, unused
+float _NearPlane;
+float _FarPlane;            // Max distance (e.g., 5000m)
+float _DistributionPower;   // Controls Z-slice distribution (2.0 = quadratic, good default)
+
+// Camera
+float3 _CameraPosition;
+float4x4 _InverseViewProj;
+float _WorldScale;          // Meters per Unity unit
+
+// Atmosphere (Single Unified Medium)
+float _GroundDensity;       // Base density at ground level
+float _ScaleHeight;         // Height where density drops to 1/e (meters)
+float _AtmosphereHeight;    // Upper cutoff (meters)
+float3 _ScatteringCoeff;    // Scattering coefficient (controls color)
+float3 _ExtinctionCoeff;    // Total extinction (scattering + absorption)
+
+// Sun
+float3 _SunDirection;       // Normalized, pointing TOWARD sun
+float3 _SunColor;           // Sun color * intensity
+float _SunIntensity;
+
+// Sky Ambient
+float3 _SkyColorZenith;     // Color looking up
+float3 _SkyColorHorizon;    // Color at horizon
+float _AmbientIntensity;
+
+// Noise (Secondary Modulation)
+float _NoiseScale;
+float _NoiseStrength;       // 0 = no noise, 1 = full modulation
+float _NoiseHeightFade;     // Height at which noise fades out
+float _NoiseDistanceFade;   // Distance at which noise fades out
+float3 _WindVelocity;
+float _Time;
+
+// Phase Function
+float _MieAnisotropy;       // g parameter (0.7-0.85 typical)
+
+// Debug
+int _DebugMode;             // 0=None, 1=Density, 2=OpticalDepth, 3=Transmittance
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+// Henyey-Greenstein phase function
+float PhaseHG(float cosTheta, float g)
+{
+    float g2 = g * g;
+    float denom = 1.0 + g2 - 2.0 * g * cosTheta;
+    return (1.0 - g2) / (4.0 * PI * pow(max(denom, 0.0001), 1.5));
+}
+
+// Rayleigh phase function
+float PhaseRayleigh(float cosTheta)
+{
+    return (3.0 / (16.0 * PI)) * (1.0 + cosTheta * cosTheta);
+}
+
+// Z-slice to distance: Power-law distribution
+// Dense near camera, sparse far away
+// slice 0 → nearPlane, slice (n-1) → farPlane
+float SliceToDistance(float sliceNorm)
+{
+    // Power distribution: d = near + (far - near) * t^power
+    // Higher power = more slices near camera
+    return _NearPlane + (_FarPlane - _NearPlane) * pow(sliceNorm, _DistributionPower);
+}
+
+// Distance to Z-slice (inverse)
+float DistanceToSlice(float distance)
+{
+    float t = (distance - _NearPlane) / (_FarPlane - _NearPlane);
+    return pow(saturate(t), 1.0 / _DistributionPower);
+}
+
+// World position from froxel coordinates
+float3 FroxelToWorld(uint3 id, float jitter)
+{
+    // Screen UV (0-1)
+    float2 uv = (id.xy + 0.5) / _GridResolution.xy;
+    
+    // Z normalized with optional jitter for integration
+    float zNorm = (id.z + jitter) / _GridResolution.z;
+    
+    // Distance from camera (power-law distribution)
+    float distance = SliceToDistance(zNorm);
+    
+    // Ray direction from inverse view-projection
+    float4 clipPos = float4(uv * 2.0 - 1.0, 0.5, 1.0);
+    float4 worldPos = mul(_InverseViewProj, clipPos);
+    worldPos /= worldPos.w;
+    float3 rayDir = normalize(worldPos.xyz - _CameraPosition);
+    
+    // World position along ray
+    return _CameraPosition + rayDir * distance;
+}
+
+// Simple 3D hash for noise
+float Hash3D(float3 p)
+{
+    p = frac(p * float3(0.1031, 0.1030, 0.0973));
+    p += dot(p, p.yxz + 33.33);
+    return frac((p.x + p.y) * p.z);
+}
+
+// Value noise (smooth)
+float ValueNoise(float3 p)
+{
+    float3 i = floor(p);
+    float3 f = frac(p);
+    f = f * f * (3.0 - 2.0 * f); // Smoothstep
+    
+    float n000 = Hash3D(i + float3(0, 0, 0));
+    float n100 = Hash3D(i + float3(1, 0, 0));
+    float n010 = Hash3D(i + float3(0, 1, 0));
+    float n110 = Hash3D(i + float3(1, 1, 0));
+    float n001 = Hash3D(i + float3(0, 0, 1));
+    float n101 = Hash3D(i + float3(1, 0, 1));
+    float n011 = Hash3D(i + float3(0, 1, 1));
+    float n111 = Hash3D(i + float3(1, 1, 1));
+    
+    float n00 = lerp(n000, n100, f.x);
+    float n10 = lerp(n010, n110, f.x);
+    float n01 = lerp(n001, n101, f.x);
+    float n11 = lerp(n011, n111, f.x);
+    
+    float n0 = lerp(n00, n10, f.y);
+    float n1 = lerp(n01, n11, f.y);
+    
+    return lerp(n0, n1, f.z);
+}
+
+// FBM noise (multiple octaves)
+float FBMNoise(float3 p)
+{
+    float value = 0.0;
+    float amplitude = 0.5;
+    float frequency = 1.0;
+    
+    for (int i = 0; i < 3; i++)
+    {
+        value += amplitude * ValueNoise(p * frequency);
+        amplitude *= 0.5;
+        frequency *= 2.0;
+    }
+    
+    return value;
+}
+
+// ============================================================================
+// MEDIUM MODEL (Single Unified Atmosphere)
+// ============================================================================
+
+// Get atmospheric density at a world position
+// This is the CORE of the physically-based model
+float GetMediumDensity(float3 worldPos)
+{
+    // Height in meters (Y is world height)
+    float heightMeters = worldPos.y * _WorldScale;
+    
+    // Exponential height falloff (physically correct)
+    // density(h) = density_0 * exp(-h / H)
+    float baseDensity = _GroundDensity * exp(-max(0, heightMeters) / _ScaleHeight);
+    
+    // Upper atmosphere cutoff (smooth)
+    float upperFade = 1.0 - smoothstep(_AtmosphereHeight * 0.7, _AtmosphereHeight, heightMeters);
+    baseDensity *= upperFade;
+    
+    return baseDensity;
+}
+
+// Get noise modulation (secondary, NOT primary atmosphere)
+float GetNoiseModulation(float3 worldPos, float distance)
+{
+    if (_NoiseStrength <= 0.0001) return 1.0;
+    
+    float heightMeters = worldPos.y * _WorldScale;
+    
+    // Noise fades with height
+    float heightFade = 1.0 - smoothstep(0, _NoiseHeightFade, heightMeters);
+    
+    // Noise fades with distance (vanishes near horizon)
+    float distFade = 1.0 - smoothstep(_NoiseDistanceFade * 0.5, _NoiseDistanceFade, distance);
+    
+    // Sample world-space noise (animated by wind)
+    float3 noisePos = worldPos * _NoiseScale + _WindVelocity * _Time;
+    float noise = FBMNoise(noisePos);
+    
+    // Remap noise to modulation factor
+    // noise: 0-1 → modulation: (1-strength) to (1+strength)
+    float modulation = lerp(1.0, lerp(1.0 - _NoiseStrength, 1.0 + _NoiseStrength, noise), heightFade * distFade);
+    
+    return max(0, modulation);
+}
+
+// ============================================================================
+// SUN OPTICAL DEPTH (The Hard Part - Done Right)
+// ============================================================================
+
+// Compute optical depth from a point toward the sun
+// This is GEOMETRY-FREE - only medium thickness
+// Gives us: time-of-day, golden hour, blue hour, harsh noon
+float ComputeSunOpticalDepth(float3 worldPos)
+{
+    // Number of samples along sun ray
+    // Low frequency signal, doesn't need many samples
+    const int SUN_SAMPLES = 8;
+    
+    // Height in meters
+    float heightMeters = worldPos.y * _WorldScale;
+    
+    // How far to integrate (to top of atmosphere)
+    float remainingAtmosphere = max(0, _AtmosphereHeight - heightMeters);
+    
+    // If sun is below horizon at this point, max extinction
+    if (_SunDirection.y < 0.01)
+    {
+        // Sun near/below horizon - long path through atmosphere
+        return 10.0;
+    }
+    
+    // Integration distance (along sun direction to exit atmosphere)
+    float integrationDist = remainingAtmosphere / max(_SunDirection.y, 0.01);
+    integrationDist = min(integrationDist, 50000.0); // Cap at 50km
+    
+    float stepSize = integrationDist / SUN_SAMPLES;
+    float opticalDepth = 0.0;
+    
+    [unroll]
+    for (int i = 0; i < SUN_SAMPLES; i++)
+    {
+        float t = (i + 0.5) * stepSize;
+        float3 samplePos = worldPos + _SunDirection * t / _WorldScale; // Back to Unity units
+        
+        float density = GetMediumDensity(samplePos);
+        opticalDepth += density * stepSize;
+    }
+    
+    return opticalDepth;
+}
+
+// Sun transmittance from optical depth
+float3 SunTransmittance(float opticalDepth)
+{
+    // Beer-Lambert with wavelength-dependent extinction
+    return exp(-opticalDepth * _ExtinctionCoeff);
+}
+
+// ============================================================================
+// SKY AMBIENT (Not a Light Source - Precomputed Feel)
+// ============================================================================
+
+float3 GetSkyAmbient(float3 worldPos, float3 viewDir)
+{
+    float heightMeters = worldPos.y * _WorldScale;
+    
+    // Blend between horizon and zenith based on height and view direction
+    float heightBlend = saturate(heightMeters / _AtmosphereHeight);
+    float upDot = saturate(dot(float3(0, 1, 0), -viewDir) * 0.5 + 0.5);
+    
+    float3 skyColor = lerp(_SkyColorHorizon, _SkyColorZenith, upDot * heightBlend);
+    
+    // Ground darkening (looking down)
+    float groundDark = saturate(-viewDir.y);
+    skyColor *= 1.0 - groundDark * 0.5;
+    
+    return skyColor * _AmbientIntensity;
+}
+
+// ============================================================================
+// INJECT LIGHTING KERNEL
+// ============================================================================
+
+[numthreads(8, 8, 8)]
+void InjectLighting(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id >= uint3(_GridResolution.xyz))) return;
+    
+    // Get world position for this froxel
+    float3 worldPos = FroxelToWorld(id, 0.5);
+    float distance = length(worldPos - _CameraPosition) * _WorldScale;
+    
+    // View direction (from camera to froxel)
+    float3 viewDir = normalize(worldPos - _CameraPosition);
+    
+    // -------------------------------------------------------------------------
+    // 1. MEDIUM DENSITY
+    // -------------------------------------------------------------------------
+    float baseDensity = GetMediumDensity(worldPos);
+    float noiseModulation = GetNoiseModulation(worldPos, distance);
+    float totalDensity = baseDensity * noiseModulation;
+    
+    // Early out for negligible density
+    // Note: extinction=0 means fully transparent (transmittance=1)
+    if (totalDensity < 0.0000001)
+    {
+        _VolumeInject[id] = float4(0, 0, 0, 0); // extinction=0 is correct (transparent)
+        return;
+    }
+    
+    // -------------------------------------------------------------------------
+    // 2. EXTINCTION
+    // -------------------------------------------------------------------------
+    // Extinction coefficient should be in units of 1/unity_unit
+    // For physically-based: extinction = sigma * density
+    // We keep it simple: extinction is already the per-unit-distance extinction
+    float extinction = dot(_ExtinctionCoeff, float3(0.2126, 0.7152, 0.0722)) * totalDensity;
+    
+    // -------------------------------------------------------------------------
+    // 3. DEBUG MODES
+    // -------------------------------------------------------------------------
+    if (_DebugMode > 0)
+    {
+        float3 debugColor = 0;
+        
+        if (_DebugMode == 1) // Density
+        {
+            debugColor = float3(totalDensity, totalDensity, totalDensity) * 10000.0; // Scale up for visibility
+        }
+        else if (_DebugMode == 2) // Optical Depth
+        {
+            float od = ComputeSunOpticalDepth(worldPos);
+            debugColor = float3(od, od, od) * 0.1;
+        }
+        else if (_DebugMode == 3) // Sun Transmittance
+        {
+            float od = ComputeSunOpticalDepth(worldPos);
+            debugColor = SunTransmittance(od);
+        }
+        else if (_DebugMode == 4) // Transmittance debug - output extinction for Accumulate to process
+        {
+            // For transmittance debug, we still need to output extinction
+            // so the Accumulate pass can compute transmittance
+            _VolumeInject[id] = float4(1, 1, 1, extinction); // White fog with real extinction
+            return;
+        }
+        
+        _VolumeInject[id] = float4(debugColor, 0); // extinction=0 so it passes through
+        return;
+    }
+    
+    // -------------------------------------------------------------------------
+    // 4. SUN LIGHTING (Physically-Based)
+    // -------------------------------------------------------------------------
+    float3 inScattering = 0;
+    
+    // Sun optical depth (no shadows, no geometry - just medium)
+    float sunOpticalDepth = ComputeSunOpticalDepth(worldPos);
+    float3 sunTransmittance = SunTransmittance(sunOpticalDepth);
+    
+    // Phase functions
+    float cosTheta = dot(viewDir, _SunDirection);
+    float phaseRayleigh = PhaseRayleigh(cosTheta);
+    float phaseMie = PhaseHG(cosTheta, _MieAnisotropy);
+    
+    // Combined phase (blend based on particle size assumption)
+    float phase = lerp(phaseRayleigh, phaseMie, 0.5);
+    
+    // In-scattering from sun
+    float3 sunScattering = _SunColor * _SunIntensity * sunTransmittance * phase * totalDensity;
+    inScattering += sunScattering * _ScatteringCoeff;
+    
+    // -------------------------------------------------------------------------
+    // 5. SKY AMBIENT
+    // -------------------------------------------------------------------------
+    float3 skyAmbient = GetSkyAmbient(worldPos, viewDir);
+    
+    // Ambient scattering (isotropic - no phase function)
+    float3 ambientScattering = skyAmbient * totalDensity;
+    inScattering += ambientScattering * _ScatteringCoeff;
+    
+    // -------------------------------------------------------------------------
+    // 6. OUTPUT
+    // -------------------------------------------------------------------------
+    _VolumeInject[id] = float4(inScattering, extinction);
+}
+
+// ============================================================================
+// ACCUMULATE KERNEL (Front-to-Back with Early Exit)
+// ============================================================================
+
+[numthreads(8, 8, 1)]
+void Accumulate(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id.xy >= uint2(_GridResolution.xy))) return;
+    
+    float3 accumulatedLight = 0;
+    float transmittance = 1.0;
+    
+    // Early exit threshold
+    const float TRANSMITTANCE_THRESHOLD = 0.001;
+    
+    // Front-to-back accumulation
+    for (int z = 0; z < (int)_GridResolution.z; z++)
+    {
+        // Early exit when fully opaque
+        if (transmittance < TRANSMITTANCE_THRESHOLD)
+        {
+            // Fill remaining slices with final values
+            for (int zz = z; zz < (int)_GridResolution.z; zz++)
+            {
+                _VolumeAccumulated[uint3(id.xy, zz)] = float4(accumulatedLight, transmittance);
+            }
+            return;
+        }
+        
+        uint3 voxelCoord = uint3(id.xy, z);
+        float4 sliceData = _VolumeInject[voxelCoord];
+        
+        float3 scattering = sliceData.rgb;
+        float extinction = sliceData.a;
+        
+        // Compute step size (from power-law distribution)
+        // Step size is in Unity units, extinction coefficient already accounts for world scale
+        float zNorm0 = (z + 0.0) / _GridResolution.z;
+        float zNorm1 = (z + 1.0) / _GridResolution.z;
+        float dist0 = SliceToDistance(zNorm0);
+        float dist1 = SliceToDistance(zNorm1);
+        float stepSize = dist1 - dist0; // In Unity units
+        
+        // Beer-Lambert transmittance for this step
+        float stepTransmittance = exp(-extinction * stepSize);
+        
+        // Analytic integration of in-scattering
+        float3 stepScattering;
+        if (extinction > 0.0001)
+        {
+            // Proper integration: S * (1 - T) / sigma
+            stepScattering = scattering * (1.0 - stepTransmittance) / extinction;
+        }
+        else
+        {
+            // When extinction is near zero, scattering should also be near zero
+            // (no medium = no scattering)
+            stepScattering = 0;
+        }
+        
+        // Accumulate
+        accumulatedLight += stepScattering * transmittance;
+        transmittance *= stepTransmittance;
+        
+        // Store result for this slice
+        _VolumeAccumulated[voxelCoord] = float4(accumulatedLight, transmittance);
+    }
+}
+
+
+

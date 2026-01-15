@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: aee646932b744b7e9f8df520e52c051b
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - VolumetricFogShader: {fileID: 4800000, guid: 02b530bd2bbb4092a6b4061f697723cd,
+      type: 3}
+  - ShapeTexture: {fileID: 11700000, guid: 017952c84bd768942aa40adaebc89625, type: 2}
+  - DetailTexture: {fileID: 11700000, guid: 4e284fbabf836e44ab64409b9131d99f, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

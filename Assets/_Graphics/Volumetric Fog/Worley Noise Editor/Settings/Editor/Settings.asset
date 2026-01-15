@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 845f866a73444d55983fae6d5c019450, type: 3}
+  m_Name: Settings
+  m_EditorClassIdentifier: 
+  activeTextureType: 1
+  activeChannel: 0
+  worleyShader: {fileID: 7200000, guid: 3826e340535338143903e6d89670287b, type: 3}
+  utilsShader: {fileID: 7200000, guid: d5926417a29f428e875571ecb3260127, type: 3}
+  shapeResolution: 128
+  detailResolution: 32
+  shapeSettings: {fileID: 11400000, guid: 1663da16b472b6a41ac1777c5aa3161d, type: 2}
+  detailSettings: {fileID: 11400000, guid: ce284a3fada1a4b4ca5c6eaeac0f65e7, type: 2}
+  viewerGreyscale: 1
+  viewerShowAllChannels: 0
+  previewDepthSlice: 0
+  lastSaveDirectory: 

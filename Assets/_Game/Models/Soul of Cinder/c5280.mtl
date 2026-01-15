@@ -1,0 +1,189 @@
+# Blender MTL File: 'None'
+# Material Count: 14
+
+newmtl assets_textures_AM
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 1.000000
+illum 2
+map_Kd c5280_AM_a.png
+map_Bump  c5280_AM_n.png
+map_Ks  c5280_AM_r.png
+
+newmtl assets_textures_BD01
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 0.000000
+illum 2
+map_Kd c5280_BD_01_a.png
+map_Bump  c5280_BD_01_n.png
+map_Ks  c5280_BD_01_r.png
+map_d  c5280_BD_01_a.png
+
+newmtl assets_textures_BD02
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 0.000000
+illum 2
+map_Kd c5280_BD_02_a.png
+map_Bump  c5280_BD_02_n.png
+map_Ks  c5280_BD_02_r.png
+map_d  c5280_BD_02_a.png
+
+newmtl assets_textures_BD03
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 1.000000
+illum 2
+map_Kd c5280_BD_addclotharmor_a.png
+map_Bump  c5280_BD_addclotharmor_n.png
+map_Ks  c5280_BD_addclotharmor_r.png
+
+newmtl assets_textures_HD
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 0.000000
+illum 2
+map_Kd c5280_HD_a.png
+map_Bump  c5280_HD_n.png
+map_Ks  c5280_HD_r.png
+map_d  c5280_HD_a.png
+
+newmtl assets_textures_LG
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 1.000000
+illum 2
+map_Kd c5280_LG_a.png
+map_Bump  c5280_LG_n.png
+map_Ks  c5280_LG_r.png
+
+newmtl assets_textures__01
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 1.000000
+illum 2
+map_Kd c5280_weapon_a.png
+map_Bump  c5280_weapon_n.png
+map_Ks  c5280_weapon_r.png
+
+newmtl assets_textures__02
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 1.000000
+illum 2
+map_Kd c5280_weapon_a.png
+map_Bump  c5280_weapon_n.png
+map_Ks  c5280_weapon_r.png
+
+newmtl assets_textures__03
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 1.000000
+illum 2
+map_Kd c5280_weapon_a.png
+map_Bump  c5280_weapon_n.png
+map_Ks  c5280_weapon_r.png
+
+newmtl assets_textures__04
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 1.000000
+illum 2
+map_Kd c5280_weapon_a.png
+map_Bump  c5280_weapon_n.png
+map_Ks  c5280_weapon_r.png
+
+newmtl assets_textures__05
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 1.000000
+illum 2
+map_Kd c5280_weapon_a.png
+map_Bump  c5280_weapon_n.png
+map_Ks  c5280_weapon_r.png
+
+newmtl assets_textures_mantle
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 0.000000
+illum 2
+map_Kd c5280_mantle_a.png
+map_Bump  c5280_mantle_n.png
+map_Ks  c5280_mantle_r.png
+map_d  c5280_mantle_a.png
+
+newmtl assets_textures_mantle_cloth
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 0.000000
+illum 2
+map_Kd c5280_flamecape_a.png
+map_Bump  c5280_flamecape_n.png
+map_Ks  c5280_flamecape_r.png
+map_d  c5280_flamecape_a.png
+
+newmtl assets_textures_scabbard
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.550000
+d 1.000000
+illum 2
+map_Kd c5280_scabbard_a.png
+map_Bump  c5280_scabbard_n.png
+map_Ks  c5280_scabbard_r.png

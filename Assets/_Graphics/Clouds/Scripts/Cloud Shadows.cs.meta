@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f9b768c36ebac4354af3717d8ea4418a
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - cloudShadows: {fileID: 8600000, guid: d5b59c450f45b4a9e8a7a9a567b3a3a2, type: 2}
+  - noise: {fileID: 2800000, guid: 201a71ac09616462bb184f9743bafd50, type: 3}
+  - details: {fileID: 2800000, guid: 370d17c72f3b54e2d862f361345a50bb, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

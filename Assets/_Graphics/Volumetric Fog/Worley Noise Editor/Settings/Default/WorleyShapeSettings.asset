@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c88f2f3b02b4c42a1a402093224a6b1, type: 3}
+  m_Name: WorleyShapeSettings
+  m_EditorClassIdentifier: 
+  channelR:
+    seed: 0
+    gridSizeA: 5
+    gridSizeB: 10
+    gridSizeC: 15
+    persistence: 1
+    tile: 1
+    invert: 1
+  channelG:
+    seed: 10
+    gridSizeA: 10
+    gridSizeB: 15
+    gridSizeC: 20
+    persistence: 0.5
+    tile: 1
+    invert: 1
+  channelB:
+    seed: 20
+    gridSizeA: 15
+    gridSizeB: 20
+    gridSizeC: 25
+    persistence: 0.5
+    tile: 1
+    invert: 1
+  channelA:
+    seed: 30
+    gridSizeA: 20
+    gridSizeB: 25
+    gridSizeC: 30
+    persistence: 0.5
+    tile: 1
+    invert: 1

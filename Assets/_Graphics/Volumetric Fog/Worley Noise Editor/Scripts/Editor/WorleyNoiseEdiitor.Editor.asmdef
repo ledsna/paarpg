@@ -1,0 +1,22 @@
+{
+    "name": "WorleyNoiseEdiitor.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e5f0d8437914b3a4988c67cc2c1ef4cc",
+        "GUID:fb78d0b49cb52c94fb023dc5d0d53ede",
+        "GUID:01b001902063fe64da7d6b7f54ac36de",
+        "GUID:776d03a35f1b52c4a9aed9f56d7b4229",
+        "GUID:df380645f10b7bc4b97d4f5eb6303d95"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

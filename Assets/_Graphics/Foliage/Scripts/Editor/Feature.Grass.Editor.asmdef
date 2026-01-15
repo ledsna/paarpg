@@ -1,0 +1,21 @@
+{
+    "name": "Feature.Grass.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:d17396d254a71be44b883f72aaf8b77b",
+        "GUID:776d03a35f1b52c4a9aed9f56d7b4229",
+        "GUID:01b001902063fe64da7d6b7f54ac36de",
+        "GUID:df380645f10b7bc4b97d4f5eb6303d95"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

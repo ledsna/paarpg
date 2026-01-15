@@ -1,0 +1,4 @@
+[submodule "NaughtyAttributes"]
+    path = NaughtyAttributes
+	url = git@github.com:F1Soda/NaughtyAttributes.git
+    branch = upm-custom
