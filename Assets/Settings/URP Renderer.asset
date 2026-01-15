@@ -1,5 +1,42 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-6849550071879620218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80784c296b0684236a55feb62a0fff71, type: 3}
+  m_Name: FroxelVolumetricFogFeature
+  m_EditorClassIdentifier: Features::FroxelLighting.FroxelVolumetricFogFeature
+  m_Active: 0
+  settings:
+    gridResolution: {x: 160, y: 90, z: 64}
+    nearPlane: 0.3
+    farPlane: 5000
+    distributionPower: 2
+    metersPerUnit: 1
+    groundDensity: 0.001
+    scaleHeight: 1200
+    atmosphereHeight: 200
+    scatteringCoeff: {x: 0.4, y: 0.6, z: 1.1}
+    extinctionCoeff: {x: 0.6, y: 0.8, z: 1.2}
+    sunIntensity: 1
+    skyColorZenith: {r: 0.4, g: 0.6, b: 1, a: 1}
+    skyColorHorizon: {r: 0.8, g: 0.85, b: 0.9, a: 1}
+    ambientIntensity: 0
+    mieAnisotropy: 0.76
+    noiseScale: 0.01
+    noiseStrength: 0.3
+    noiseHeightFade: 500
+    noiseDistanceFade: 2000
+    windVelocity: {x: 5, y: 0, z: 3}
+    debugMode: 0
+  computeShader: {fileID: 7200000, guid: 968706becd2f8440dbb6cf8e3930ec29, type: 3}
+  compositeShader: {fileID: 4800000, guid: 3b921e23065b24018aa19be398810471, type: 3}
 --- !u!114 &-1395698828817776804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54,7 +91,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aee646932b744b7e9f8df520e52c051b, type: 3}
   m_Name: VolumetricFogFeature
   m_EditorClassIdentifier: VolumetricFog.Core::VolumetricFog.Core.VolumetricFogFeature
-  m_Active: 1
+  m_Active: 0
   VolumetricFogShader: {fileID: 4800000, guid: 02b530bd2bbb4092a6b4061f697723cd, type: 3}
   ShapeTexture: {fileID: 11700000, guid: 017952c84bd768942aa40adaebc89625, type: 2}
   DetailTexture: {fileID: 11700000, guid: 4e284fbabf836e44ab64409b9131d99f, type: 2}
@@ -91,7 +128,8 @@ MonoBehaviour:
   - {fileID: -1395698828817776804}
   - {fileID: 626952295790532232}
   - {fileID: -320374988667725092}
-  m_RendererFeatureMap: ebaa015c619e1aee5c3fe3564f7ba1ec88d6b591ca61b308dc5a8a2da5cc8dfb
+  - {fileID: -6849550071879620218}
+  m_RendererFeatureMap: ebaa015c619e1aee5c3fe3564f7ba1ec88d6b591ca61b308dc5a8a2da5cc8dfb86295d068082f1a0
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 2
@@ -126,7 +164,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b00045f12942b46c698459096c89274e, type: 3}
-  m_Name: FullScreenPassRendererFeature
+  m_Name: Debug Texture
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.FullScreenPassRendererFeature
   m_Active: 0
   injectionPoint: 600
