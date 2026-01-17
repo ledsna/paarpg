@@ -11,6 +11,7 @@ namespace VolumetricFog.Core
         private Texture3D shapeTexture;
         private Texture3D detailTexture;
         private VolumetricFogVolumeComponent volumeComponent;
+        private VolumetricFogVolumeComponent sceneVolumeComponent;
 
         private int numSteps;
         private int numStepsLight;
@@ -26,12 +27,19 @@ namespace VolumetricFog.Core
             public Material material;
         }
 
-        public void Setup(Material material, int numSteps, int numStepsLight, VolumetricFogVolumeComponent volumeComponent)
+        public void Setup(
+            Material material, 
+            int numSteps, 
+            int numStepsLight, 
+            VolumetricFogVolumeComponent volumeComponent,
+            VolumetricFogVolumeComponent sceneVolumeComponent
+        )
         {
             this.material = material;
             this.numSteps = numSteps;
             this.numStepsLight = numStepsLight;
             this.volumeComponent = volumeComponent;
+            this.sceneVolumeComponent = sceneVolumeComponent;
         }
 
         private bool CanRecord() => material != null;
@@ -40,8 +48,7 @@ namespace VolumetricFog.Core
         {
             var cameraData = frameData.Get<UniversalCameraData>();
             var cam = cameraData.camera;
-
-
+            
             var view = cam.worldToCameraMatrix;
             var proj = cam.projectionMatrix;
 

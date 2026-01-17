@@ -7,7 +7,12 @@ namespace VolumetricFog.Core
 {
     public class VolumetricFogFeature : ScriptableRendererFeature
     {
-        [Required] public Shader VolumetricFogShader;
+        // Пришлось отказаться от Shader по той причине, что внутри AddRenderPasses запрещается
+        // через доки создавать объекты, а в Create оно работает через жопу, так как вызов Create 
+        // происходит тоже часто и надо иметь Dispose который вызывается криво и вызывает
+        // ошибки при попытке осовбодить созданный ресурс.
+        // Если что источник: https://docs.unity3d.com/6000.5/Documentation/Manual/urp/renderer-features/scriptable-renderer-features/inject-a-pass-using-a-scriptable-renderer-feature.html
+        [Required] public Material material;
         [Required] public Texture3D ShapeTexture;
         [Required] public Texture3D DetailTexture;
 
@@ -18,8 +23,16 @@ namespace VolumetricFog.Core
         [InfoBox("Currently NumStepsLight set to 8 in shader with #define NUM_STEPS_LIGHT 8. Made for better performance.")]
         [ReadOnly]
         [Range(1, 16)] public int NumStepsLight = 16;
+        
+        [Header("General")]
+        [SerializeField] private bool renderInScene;
 
-        private Material material;
+        public bool useCustomFogSettingsForScene;
+        [ShowIf("useCustomFogSettingsForScene")]
+        [Tooltip("Используй кастомный пресет чтобы переопределить какие то настройки в сцене")]
+        [SerializeField] private VolumetricFogVolumeComponent sceneFogSettings;
+        
+        
         private VolumetricFogPass volumetricFogPass;
         private VolumetricFogVolumeComponent volumeComponent;
 
@@ -34,28 +47,21 @@ namespace VolumetricFog.Core
             if (volumetricFogPass == null)
                 return;
 
-            if (VolumetricFogShader == null)
+            var isSceneCamera = renderingData.cameraData.cameraType == CameraType.SceneView;
+            if (!renderInScene && isSceneCamera)
                 return;
-
+            
             if (material == null)
-                material = new Material(VolumetricFogShader);
-
+            {
+                Debug.LogWarning(name + " material is null and will be skipped.");
+                return;
+            }
+            
             var stack = VolumeManager.instance.stack;
             volumeComponent = stack.GetComponent<VolumetricFogVolumeComponent>();
-            volumetricFogPass.Setup(material, NumSteps, NumStepsLight, volumeComponent);
+            var sceneVolumeComponent = useCustomFogSettingsForScene && isSceneCamera ? sceneFogSettings : null;
+            volumetricFogPass.Setup(material, NumSteps, NumStepsLight, volumeComponent, sceneVolumeComponent);
             renderer.EnqueuePass(volumetricFogPass);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (Application.isPlaying)
-            {
-                Destroy(material);
-            }
-            else
-            {
-                DestroyImmediate(material);
-            }
         }
     }
 }

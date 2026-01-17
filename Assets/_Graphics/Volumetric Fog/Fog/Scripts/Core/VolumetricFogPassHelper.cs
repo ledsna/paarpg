@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 namespace VolumetricFog.Core
@@ -52,20 +53,54 @@ namespace VolumetricFog.Core
             material.SetTexture(ShapeTex, shapeTexture);
             material.SetTexture(DetailTex, detailTexture);
 
-            material.SetFloat(ShapeScale, volumeComponent.shapeScale.value);
-            material.SetVector(ShapeOffset, volumeComponent.shapeOffset.value);
+            material.SetFloat(
+                ShapeScale,
+                GetValue(sceneVolumeComponent?.shapeScale, volumeComponent.shapeScale)
+            );
 
-            material.SetFloat(DetailScale, volumeComponent.detailScale.value);
-            material.SetVector(DetailOffset, volumeComponent.detailOffset.value);
+            material.SetVector(
+                ShapeOffset,
+                GetValue(sceneVolumeComponent?.shapeOffset, volumeComponent.shapeOffset)
+            );
+
+            material.SetFloat(
+                DetailScale,
+                GetValue(sceneVolumeComponent?.detailScale, volumeComponent.detailScale)
+            );
+
+            material.SetVector(
+                DetailOffset,
+                GetValue(sceneVolumeComponent?.detailOffset, volumeComponent.detailOffset)
+            );
             // --------
 
             // Clouds
             // ------
-            material.SetVector(ShapeWeights, volumeComponent.shapeWeights.value);
-            material.SetVector(DetailWeights, volumeComponent.detailWeights.value);
-            material.SetFloat(DensityOffset, volumeComponent.densityOffset.value);
-            material.SetFloat(DensityMultiplier, volumeComponent.densityMultiplier.value);
-            material.SetFloat(DetailMultiplier, volumeComponent.detailMultiplier.value);
+            material.SetVector(
+                ShapeWeights,
+                GetValue(sceneVolumeComponent?.shapeWeights, volumeComponent.shapeWeights)
+            );
+
+            material.SetVector(
+                DetailWeights,
+                GetValue(sceneVolumeComponent?.detailWeights, volumeComponent.detailWeights)
+            );
+
+            material.SetFloat(
+                DensityOffset,
+                GetValue(sceneVolumeComponent?.densityOffset, volumeComponent.densityOffset)
+            );
+
+            material.SetFloat(
+                DensityMultiplier,
+                GetValue(sceneVolumeComponent?.densityMultiplier, volumeComponent.densityMultiplier)
+            );
+
+            material.SetFloat(
+                DetailMultiplier,
+                GetValue(sceneVolumeComponent?.detailMultiplier, volumeComponent.detailMultiplier)
+            );
+
             material.SetInt(NumSteps, numSteps);
             material.SetInt(NumStepsLight, numStepsLight);
             // ------
@@ -73,23 +108,46 @@ namespace VolumetricFog.Core
             // Lighting
             // --------
             var phaseParams = new Vector4(
-                volumeComponent.forwardScattering.value,
-                volumeComponent.backScattering.value,
-                volumeComponent.baseBrightness.value,
-                volumeComponent.phaseFactor.value
+                GetValue(sceneVolumeComponent?.forwardScattering, volumeComponent.forwardScattering),
+                GetValue(sceneVolumeComponent?.backScattering, volumeComponent.backScattering),
+                GetValue(sceneVolumeComponent?.baseBrightness, volumeComponent.baseBrightness),
+                GetValue(sceneVolumeComponent?.phaseFactor, volumeComponent.phaseFactor)
             );
 
             material.SetVector(PhaseParams, phaseParams);
-            material.SetFloat(LightAbsorptionThroughCloud, volumeComponent.lightAbsorptionThroughCloud.value);
-            material.SetFloat(LightAbsorptionTowardSun, volumeComponent.lightAbsorptionTowardSun.value);
-            material.SetFloat(DarknessThreshold, volumeComponent.darknessThreshold.value);
+
+            material.SetFloat(
+                LightAbsorptionThroughCloud,
+                GetValue(sceneVolumeComponent?.lightAbsorptionThroughCloud, volumeComponent.lightAbsorptionThroughCloud)
+            );
+
+            material.SetFloat(
+                LightAbsorptionTowardSun,
+                GetValue(sceneVolumeComponent?.lightAbsorptionTowardSun, volumeComponent.lightAbsorptionTowardSun)
+            );
+
+            material.SetFloat(
+                DarknessThreshold,
+                GetValue(sceneVolumeComponent?.darknessThreshold, volumeComponent.darknessThreshold)
+            );
             // --------
 
             // Wind
             // ----
-            material.SetFloat(ShapeSpeed, volumeComponent.shapeSpeed.value);
-            material.SetFloat(DetailSpeed, volumeComponent.detailSpeed.value);
-            material.SetVector(WindDir, volumeComponent.windDirection.value);
+            material.SetFloat(
+                ShapeSpeed,
+                GetValue(sceneVolumeComponent?.shapeSpeed, volumeComponent.shapeSpeed)
+            );
+
+            material.SetFloat(
+                DetailSpeed,
+                GetValue(sceneVolumeComponent?.detailSpeed, volumeComponent.detailSpeed)
+            );
+
+            material.SetVector(
+                WindDir,
+                GetValue(sceneVolumeComponent?.windDirection, volumeComponent.windDirection)
+            );
             // ----
 
             // Other 
@@ -123,25 +181,66 @@ namespace VolumetricFog.Core
 
             // Point Lights
             // ------------
-            material.SetFloat(EnablePointLights, volumeComponent.enablePointLights.value ? 1f : 0f);
-            material.SetInt(MaxPointLights, volumeComponent.maxPointLights.value);
-            material.SetInt(PointLightExtraSamples, volumeComponent.pointLightExtraSamples.value);
-            material.SetFloat(PointLightExtraThreshold, volumeComponent.pointLightExtraThreshold.value);
+            material.SetFloat(
+                EnablePointLights,
+                GetValue(sceneVolumeComponent?.enablePointLights, volumeComponent.enablePointLights) ? 1f : 0f
+            );
+
+            material.SetInt(
+                MaxPointLights,
+                GetValue(sceneVolumeComponent?.maxPointLights, volumeComponent.maxPointLights)
+            );
+
+            material.SetInt(
+                PointLightExtraSamples,
+                GetValue(sceneVolumeComponent?.pointLightExtraSamples, volumeComponent.pointLightExtraSamples)
+            );
+
+            material.SetFloat(
+                PointLightExtraThreshold,
+                GetValue(sceneVolumeComponent?.pointLightExtraThreshold, volumeComponent.pointLightExtraThreshold)
+            );
+            
             // Fog appearance
-            material.SetVector(FogColor, volumeComponent.fogColor.value);
+            material.SetVector(
+                FogColor,
+                GetValue(sceneVolumeComponent?.fogColor, volumeComponent.fogColor)
+            );
             // ------------
 
             // Quality
             // -------
-            material.SetFloat(MaxStepSize, volumeComponent.maxStepSize.value);
+            material.SetFloat(
+                MaxStepSize,
+                GetValue(sceneVolumeComponent?.maxStepSize, volumeComponent.maxStepSize)
+            );
             // -------
 
             // Edge Fade
             // ---------
-            material.SetFloat(ContainerEdgeFadeDst, volumeComponent.edgeFadeDistance.value);
-            material.SetFloat(TopFadeStrength, volumeComponent.topFadeStrength.value);
-            material.SetFloat(VerticalFadeMultiplier, volumeComponent.verticalFadeMultiplier.value);
+            material.SetFloat(
+                ContainerEdgeFadeDst,
+                GetValue(sceneVolumeComponent?.edgeFadeDistance, volumeComponent.edgeFadeDistance)
+            );
+
+            material.SetFloat(
+                TopFadeStrength,
+                GetValue(sceneVolumeComponent?.topFadeStrength, volumeComponent.topFadeStrength)
+            );
+
+            material.SetFloat(
+                VerticalFadeMultiplier,
+                GetValue(sceneVolumeComponent?.verticalFadeMultiplier, volumeComponent.verticalFadeMultiplier)
+            );
             // ---------
         }
+
+        private static T GetValue<T>(
+            VolumeParameter<T> sceneParam,
+            VolumeParameter<T> defaultParam
+        ) =>
+            sceneParam != null && sceneParam.overrideState
+                ? sceneParam.value
+                : defaultParam.value;
     }
 }
